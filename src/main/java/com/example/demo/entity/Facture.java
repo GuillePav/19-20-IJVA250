@@ -40,4 +40,12 @@ public class Facture {
     public void setLigneFactures(Set<LigneFacture> ligneFactures) {
         this.ligneFactures = ligneFactures;
     }
+
+    public Double getTotal(){
+        Double total = 0.0;
+        for (LigneFacture ligneFacture : ligneFactures) {
+            total = total + ligneFacture.getSousTotal();
+        }
+        return total;
+    }
 }

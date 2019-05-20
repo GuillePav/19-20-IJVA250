@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Client;
+import com.example.demo.entity.Facture;
+import com.example.demo.entity.LigneFacture;
 import com.example.demo.service.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -10,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +32,9 @@ public class ExportController {
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired
+    private FactureService factureService;
 
     @GetMapping("/clients/csv")
     public void clientsCSV(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -60,14 +66,19 @@ public class ExportController {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Clients");
         Row headerRow = sheet.createRow(0);
+
         Cell cellId = headerRow.createCell(0);
         cellId.setCellValue("Id");
+
         Cell cellNom = headerRow.createCell(1);
         cellNom.setCellValue("Nom");
+
         Cell cellPrenom = headerRow.createCell(2);
         cellPrenom.setCellValue("Prénom");
+
         Cell cellDateNaissance = headerRow.createCell(3);
         cellDateNaissance.setCellValue("Date de naissance");
+
         Cell cellAge = headerRow.createCell(4);
         cellAge.setCellValue("Age");
 
@@ -76,22 +87,66 @@ public class ExportController {
 
             int Age =  now.getYear() - client.getDateNaissance().getYear();
             Row row = sheet.createRow(i+1);
+
             Cell cellIdClient = row.createCell(0);
             cellIdClient.setCellValue(client.getId());
+
             Cell cellNomClient = row.createCell(1);
             cellNomClient.setCellValue(client.getNom());
+
             Cell cellPrenomClient = row.createCell(2);
             cellPrenomClient.setCellValue(client.getPrenom());
+
             Cell cellDateNaissanceClient = row.createCell(3);
             cellDateNaissanceClient.setCellValue(client.getDateNaissance().format(DateTimeFormatter.ofPattern("dd/MM/YYYY")));
+
             Cell cellAgeClient = row.createCell(4);
             cellAgeClient.setCellValue(Age);
+
             i++;
 
+        }
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    @GetMapping("/clients/{id}/factures/xlsx")
+    public void facturesXLXSByclient(@PathVariable("id") Long clientId, HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        response.setContentType("application/vnd.ms-excel\n");
+        response.setHeader("Content-Disposition", "attachment; filename=\"factures-client" + clientId + ".xlsx\"");
+        List<Facture>factures = factureService.findFacturesClient(clientId);
+
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Factures");
+
+        Row headerRow = sheet.createRow(0);
+
+        Cell cellId = headerRow.createCell(0);
+        cellId.setCellValue("Id");
+
+        Cell cellPrixTotal = headerRow.createCell(1);
+        cellPrixTotal.setCellValue("Prix total");
+
+        int i=0;
+        for (Facture facture : factures) {
+
+            Row row = sheet.createRow(i + 1);
+
+            Cell cellIdFacture = row.createCell(0);
+            cellIdFacture.setCellValue(facture.getId());
+
+            Cell cellPrixTotalFacture = row.createCell(1);
+            cellPrixTotalFacture.setCellValue(facture.getTotal());
+
+            i++;
         }
 
         workbook.write(response.getOutputStream());
         workbook.close();
 
+
     }
+
 }
