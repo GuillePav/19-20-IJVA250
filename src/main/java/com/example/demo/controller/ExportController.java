@@ -169,16 +169,17 @@ public class ExportController {
             List<Facture> factures = factureService.findFacturesClient(client.getId());
             for (Facture facture : factures) {
                 Sheet sheetFacture = workbook.createSheet("Facture " + facture.getId());
+                Row headerRowFacture = sheetFacture.createRow(0);
 
-                int i=0;
+                Cell cellNomArticleHeader = headerRowFacture.createCell(0);
+                cellNomArticleHeader.setCellValue("Libellé article");
+                Cell cellQuantiteHeader = headerRowFacture.createCell(1);
+                cellQuantiteHeader.setCellValue("Quantité commandée");
+
+                int i = 1;
                 for(LigneFacture ligneFacture : facture.getLigneFactures()){
-                    Row headerRowFacture = sheetFacture.createRow(i);
 
-                    Cell cellNomArticleHeader = headerRowFacture.createCell(0);
-                    cellNomArticleHeader.setCellValue("Libellé article");
-                    Cell cellQuantiteHeader = headerRowFacture.createCell(1);
-                    cellQuantiteHeader.setCellValue("Quantité commandée");
-                    Row rowFacture = sheetFacture.createRow(1);
+                    Row rowFacture = sheetFacture.createRow(i);
 
                     Cell cellNomArticle = rowFacture.createCell(0);
                     cellNomArticle.setCellValue(ligneFacture.getArticle().getLibelle());
@@ -190,6 +191,7 @@ public class ExportController {
                     cellPrixLigne.setCellValue(ligneFacture.getSousTotal());
 
                     i++;
+
                 }
             }
         }
