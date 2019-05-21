@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Controlleur pour réaliser les exports.
@@ -45,8 +46,8 @@ public class ExportController {
         LocalDate now = LocalDate.now();
         writer.println("Id;Nom;Prenom;Date de Naissance;Age");
 
-        for(Client client:allClients){
-            int Age =  now.getYear() - client.getDateNaissance().getYear();
+        for (Client client : allClients) {
+            int Age = now.getYear() - client.getDateNaissance().getYear();
             writer.println(client.getId() + ";"
                     + "\"" + client.getNom() + "\"" + ";"
                     + "\"" + client.getPrenom() + "\"" + ";"
@@ -82,11 +83,11 @@ public class ExportController {
         Cell cellAge = headerRow.createCell(4);
         cellAge.setCellValue("Age");
 
-        int i=0;
+        int i = 0;
         for (Client client : allClients) {
 
-            int Age =  now.getYear() - client.getDateNaissance().getYear();
-            Row row = sheet.createRow(i+1);
+            int Age = now.getYear() - client.getDateNaissance().getYear();
+            Row row = sheet.createRow(i + 1);
 
             Cell cellIdClient = row.createCell(0);
             cellIdClient.setCellValue(client.getId());
@@ -115,7 +116,7 @@ public class ExportController {
 
         response.setContentType("application/vnd.ms-excel\n");
         response.setHeader("Content-Disposition", "attachment; filename=\"factures-client" + clientId + ".xlsx\"");
-        List<Facture>factures = factureService.findFacturesClient(clientId);
+        List<Facture> factures = factureService.findFacturesClient(clientId);
 
 
         Workbook workbook = new XSSFWorkbook();
@@ -129,7 +130,7 @@ public class ExportController {
         Cell cellPrixTotal = headerRow.createCell(1);
         cellPrixTotal.setCellValue("Prix total");
 
-        int i=0;
+        int i = 0;
         for (Facture facture : factures) {
 
             Row row = sheet.createRow(i + 1);
@@ -142,11 +143,57 @@ public class ExportController {
 
             i++;
         }
-
         workbook.write(response.getOutputStream());
         workbook.close();
-
-
     }
 
-}
+    @GetMapping("/factures/xlsx")
+    public void facturesxlsx(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.ms-excel\n");
+        response.setHeader("Content-Disposition", "attachment; filename=\"factures.xlsx\"");
+
+        List<Client> clients = clientService.findAllClients();
+
+        Workbook workbook = new XSSFWorkbook();
+        for (Client client : clients) {
+            Sheet sheet = workbook.createSheet(client.getNom());
+
+            Row headerRow = sheet.createRow(0);
+
+            Cell cellNomClient = headerRow.createCell(0);
+            cellNomClient.setCellValue(client.getNom());
+
+            Cell cellPrenomClient = headerRow.createCell(1);
+            cellPrenomClient.setCellValue(client.getPrenom());
+
+            List<Facture> factures = factureService.findFacturesClient(client.getId());
+            for (Facture facture : factures) {
+                Sheet sheetFacture = workbook.createSheet("Facture " + facture.getId());
+
+                int i=0;
+                for(LigneFacture ligneFacture : facture.getLigneFactures()){
+                    Row headerRowFacture = sheetFacture.createRow(i);
+
+                    Cell cellNomArticleHeader = headerRowFacture.createCell(0);
+                    cellNomArticleHeader.setCellValue("Libellé article");
+                    Cell cellQuantiteHeader = headerRowFacture.createCell(1);
+                    cellQuantiteHeader.setCellValue("Quantité commandée");
+                    Row rowFacture = sheetFacture.createRow(1);
+
+                    Cell cellNomArticle = rowFacture.createCell(0);
+                    cellNomArticle.setCellValue(ligneFacture.getArticle().getLibelle());
+                    Cell cellQuantite = rowFacture.createCell(1);
+                    cellQuantite.setCellValue(ligneFacture.getQuantite());
+                    Cell cellPrixUnitaire = rowFacture.createCell(2);
+                    cellPrixUnitaire.setCellValue(ligneFacture.getArticle().getPrix());
+                    Cell cellPrixLigne = rowFacture.createCell(3);
+                    cellPrixLigne.setCellValue(ligneFacture.getSousTotal());
+
+                    i++;
+                }
+            }
+        }
+        workbook.write(response.getOutputStream());
+        workbook.close();
+        }
+    }
