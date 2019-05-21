@@ -9,6 +9,7 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -206,16 +207,22 @@ public class ExportController {
                 //Style total :
                 Font font = workbook.createFont();
                 CellStyle cellStyle = workbook.createCellStyle();
+                //CellStyle cellStyleMergedRight = workbook.createCellStyle();
                 font.setColor((short)45);
                 font.setColor(IndexedColors.RED.getIndex());
                 font.setBold(true);
                 cellStyle.setBorderBottom(BorderStyle.MEDIUM_DASHED);
                 cellStyle.setBorderLeft(BorderStyle.MEDIUM_DASHED);
-                cellStyle.setBorderRight(BorderStyle.MEDIUM_DASHED);
                 cellStyle.setBorderTop(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setBorderRight(BorderStyle.MEDIUM_DASHED);
                 cellStyle.setFont(font);
+                cellStyle.setAlignment(HorizontalAlignment.CENTER);
+                cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
                 rowTotal.getCell(0).setCellStyle(cellStyle);
-                rowTotal.getCell(0).setCellStyle(cellStyle);
+                //rowTotal.getCell(2).setCellStyle(cellStyleMergedRight);
+
+
+                sheetFacture.addMergedRegion(new CellRangeAddress(rowTotal.getRowNum(),rowTotal.getRowNum(),0,2));
             }
         }
         workbook.write(response.getOutputStream());
