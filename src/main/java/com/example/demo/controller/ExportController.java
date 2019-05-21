@@ -4,10 +4,11 @@ import com.example.demo.entity.Client;
 import com.example.demo.entity.Facture;
 import com.example.demo.entity.LigneFacture;
 import com.example.demo.service.*;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -193,6 +194,28 @@ public class ExportController {
                     i++;
 
                 }
+
+                Row rowTotal = sheetFacture.createRow(i++);
+
+                Cell cellTotalFactureLibelle = rowTotal.createCell(0);
+                cellTotalFactureLibelle.setCellValue("Prix total facture");
+
+                Cell cellTotalFacture = rowTotal.createCell(3);
+                cellTotalFacture.setCellValue(facture.getTotal());
+
+                //Style total :
+                Font font = workbook.createFont();
+                CellStyle cellStyle = workbook.createCellStyle();
+                font.setColor((short)45);
+                font.setColor(IndexedColors.RED.getIndex());
+                font.setBold(true);
+                cellStyle.setBorderBottom(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setBorderLeft(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setBorderRight(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setBorderTop(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setFont(font);
+                rowTotal.getCell(0).setCellStyle(cellStyle);
+                rowTotal.getCell(0).setCellStyle(cellStyle);
             }
         }
         workbook.write(response.getOutputStream());
