@@ -4,10 +4,6 @@ import com.example.demo.entity.Client;
 import com.example.demo.entity.Facture;
 import com.example.demo.entity.LigneFacture;
 import com.example.demo.service.*;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -17,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.persistence.Column;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -24,7 +21,6 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Controlleur pour réaliser les exports.
@@ -157,17 +153,31 @@ public class ExportController {
         List<Client> clients = clientService.findAllClients();
 
         Workbook workbook = new XSSFWorkbook();
+
+        //Onglets client :
         for (Client client : clients) {
-            Sheet sheet = workbook.createSheet(client.getNom());
+            Sheet sheet = workbook.createSheet(client.getNom().toUpperCase());
 
-            Row headerRow = sheet.createRow(0);
+            Row rowNom = sheet.createRow(0);
+            Cell cellNomClient = rowNom.createCell(0);
+            cellNomClient.setCellValue("Nom");
+            Cell cellNom = rowNom.createCell(1);
+            cellNom.setCellValue(client.getNom());
 
-            Cell cellNomClient = headerRow.createCell(0);
-            cellNomClient.setCellValue(client.getNom());
+            Row rowPrenom = sheet.createRow(1);
+            Cell cellPrenomClient = rowPrenom.createCell(0);
+            cellPrenomClient.setCellValue("Prénom");
+            Cell cellPrenom = rowPrenom.createCell(1);
+            cellPrenom.setCellValue(client.getPrenom());
 
-            Cell cellPrenomClient = headerRow.createCell(1);
-            cellPrenomClient.setCellValue(client.getPrenom());
+            Row rowDateNaissance = sheet.createRow(2);
+            Cell cellDateNaissanceClient = rowDateNaissance.createCell(0);
+            cellDateNaissanceClient.setCellValue("Date de naissance");
+            Cell cellDateNaissance = rowDateNaissance.createCell(1);
+            cellDateNaissance.setCellValue(client.getDateNaissance().format(DateTimeFormatter.ofPattern("dd/MM/YYYY")));
 
+
+            //Onglets factures :
             List<Facture> factures = factureService.findFacturesClient(client.getId());
             for (Facture facture : factures) {
                 Sheet sheetFacture = workbook.createSheet("Facture " + facture.getId());
@@ -177,7 +187,12 @@ public class ExportController {
                 cellNomArticleHeader.setCellValue("Libellé article");
                 Cell cellQuantiteHeader = headerRowFacture.createCell(1);
                 cellQuantiteHeader.setCellValue("Quantité commandée");
+                Cell cellPrixUnitaireHeader = headerRowFacture.createCell(2);
+                cellPrixUnitaireHeader.setCellValue("Prix unitaire");
+                Cell cellTotalLigneHeader = headerRowFacture.createCell(3);
+                cellTotalLigneHeader.setCellValue("Prix de la ligne");
 
+                //On affiche les lignes de la facture :
                 int i = 1;
                 for(LigneFacture ligneFacture : facture.getLigneFactures()){
 
@@ -199,7 +214,7 @@ public class ExportController {
                 Row rowTotal = sheetFacture.createRow(i++);
 
                 Cell cellTotalFactureLibelle = rowTotal.createCell(0);
-                cellTotalFactureLibelle.setCellValue("Prix total facture");
+                cellTotalFactureLibelle.setCellValue("TOTAL");
 
                 Cell cellTotalFacture = rowTotal.createCell(3);
                 cellTotalFacture.setCellValue(facture.getTotal());
@@ -207,19 +222,25 @@ public class ExportController {
                 //Style total :
                 Font font = workbook.createFont();
                 CellStyle cellStyle = workbook.createCellStyle();
-                //CellStyle cellStyleMergedRight = workbook.createCellStyle();
+                CellStyle cellStyleTotal = workbook.createCellStyle();
+
                 font.setColor((short)45);
                 font.setColor(IndexedColors.RED.getIndex());
                 font.setBold(true);
+
                 cellStyle.setBorderBottom(BorderStyle.MEDIUM_DASHED);
                 cellStyle.setBorderLeft(BorderStyle.MEDIUM_DASHED);
                 cellStyle.setBorderTop(BorderStyle.MEDIUM_DASHED);
-                cellStyle.setBorderRight(BorderStyle.MEDIUM_DASHED);
-                cellStyle.setFont(font);
-                cellStyle.setAlignment(HorizontalAlignment.CENTER);
+                cellStyleTotal.setBorderRight(BorderStyle.MEDIUM_DASHED);
+                cellStyleTotal.setBorderTop(BorderStyle.MEDIUM_DASHED);
+                cellStyleTotal.setBorderBottom(BorderStyle.MEDIUM_DASHED);
+                cellStyle.setAlignment(HorizontalAlignment.RIGHT);
                 cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+                cellStyle.setFont(font);
+                cellStyleTotal.setFont(font);
                 rowTotal.getCell(0).setCellStyle(cellStyle);
-                //rowTotal.getCell(2).setCellStyle(cellStyleMergedRight);
+                rowTotal.getCell(3).setCellStyle(cellStyleTotal);
 
 
                 sheetFacture.addMergedRegion(new CellRangeAddress(rowTotal.getRowNum(),rowTotal.getRowNum(),0,2));
