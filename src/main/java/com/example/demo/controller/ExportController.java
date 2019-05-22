@@ -176,7 +176,6 @@ public class ExportController {
             Cell cellDateNaissance = rowDateNaissance.createCell(1);
             cellDateNaissance.setCellValue(client.getDateNaissance().format(DateTimeFormatter.ofPattern("dd/MM/YYYY")));
 
-
             //Onglets factures :
             List<Facture> factures = factureService.findFacturesClient(client.getId());
             for (Facture facture : factures) {
